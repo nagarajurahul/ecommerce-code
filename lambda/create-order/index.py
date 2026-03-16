@@ -30,16 +30,16 @@ def lambda_handler(event, context):
 
     table.put_item(Item=order)
 
-    # eventbridge.put_events(
-    #     Entries=[
-    #         {
-    #             "Source": "ecommerce.orders",
-    #             "DetailType": "OrderPlaced",
-    #             "Detail": json.dumps(order),
-    #             "EventBusName": "default"
-    #         }
-    #     ]
-    # )
+    eventbridge.put_events(
+        Entries=[
+            {
+                "Source": "ecommerce.orders",
+                "DetailType": "OrderPlaced",
+                "Detail": json.dumps(order),
+                "EventBusName": "default"
+            }
+        ]
+    )
 
     return {
         "statusCode": 201,
