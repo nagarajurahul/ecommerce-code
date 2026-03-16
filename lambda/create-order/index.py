@@ -18,45 +18,53 @@ table = dynamodb.Table(TABLE_NAME)
 
 def lambda_handler(event, context):
 
-    body = json.loads(event["body"])
+    try:
+        body = json.loads(event["body"])
 
-    user_id = body["user_id"]
-    items = body["items"]
+        user_id = body["user_id"]
+        items = body["items"]
 
-    order_id = str(uuid.uuid4())
+        order_id = str(uuid.uuid4())
 
-    total_amount = sum(item["price"] * item["quantity"] for item in items)
+        total_amount = sum(item["price"] * item["quantity"] for item in items)
 
-    order = {
-        "order_id": order_id,
-        "user_id": user_id,
-        "items": items,
-        "total_amount": total_amount,
-        "status": "PENDING_PAYMENT",
-        "created_at": datetime.utcnow().isoformat()
-    }
-
-    # Save order
-    table.put_item(Item=order)
-
-    logger.info(f"Order created: {order_id}")
-
-    # Publish event
-    eventbridge.put_events(
-        Entries=[
-            {
-                "Source": "ecommerce.orders",
-                "DetailType": "OrderPlaced",
-                "Detail": json.dumps(order),
-                "EventBusName": EVENT_BUS
-            }
-        ]
-    )
-
-    return {
-        "statusCode": 201,
-        "body": json.dumps({
+        order = {
             "order_id": order_id,
-            "status": "PENDING_PAYMENT"
-        })
-    }
+            "user_id": user_id,
+            "items": items,
+            "total_amount": total_amount,
+            "status": "PENDING_PAYMENT",
+            "created_at": datetime.utcnow().isoformat()
+        }
+
+        # Save order
+        table.put_item(Item=order)
+
+        logger.info(f"Order created: {order_id}")
+
+        # Publish event
+        eventbridge.put_events(
+            Entries=[
+                {
+                    "Source": "ecommerce.orders",
+                    "DetailType": "OrderPlaced",
+                    "Detail": json.dumps(order),
+                    "EventBusName": EVENT_BUS
+                }
+            ]
+        )
+
+        return {
+            "statusCode": 201,
+            "body": json.dumps({
+                "order_id": order_id,
+                "status": "PENDING_PAYMENT"
+            })
+        }
+    except Exception as e:
+        logger.error(f"Error creating order: {str(e)}")
+
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"message": "Internal server error"})
+        }
