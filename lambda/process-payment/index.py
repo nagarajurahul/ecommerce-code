@@ -3,6 +3,10 @@ import boto3
 import random
 from datetime import datetime
 import os
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 EVENT_BUS = os.environ["EVENT_BUS"]
 
@@ -20,6 +24,8 @@ def lambda_handler(event, context):
         event_type = "PaymentSucceeded"
     else:
         event_type = "PaymentFailed"
+    
+    logger.info(f"Payment status for {order_id}: {payment_status}")
 
     eventbridge.put_events(
         Entries=[
