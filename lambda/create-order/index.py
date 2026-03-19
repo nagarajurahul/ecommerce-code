@@ -58,6 +58,7 @@ def lambda_handler(event, context):
             "statusCode": 201,
             "body": json.dumps({
                 "order_id": order_id,
+                "total_amount": total_amount,
                 "status": "PENDING_PAYMENT"
             })
         }
