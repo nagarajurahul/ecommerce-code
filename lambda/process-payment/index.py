@@ -1,6 +1,7 @@
 import json
 import boto3
 import random
+import uuid
 from datetime import datetime
 import os
 import logging
@@ -27,16 +28,22 @@ def lambda_handler(event, context):
     
     logger.info(f"Payment status for {order_id}: {payment_status}")
 
+    payment_id = str(uuid.uuid4())
+
+    payment = {
+        "payment_id": payment_id,
+        "order_id": order_id,
+        "status": payment_status,
+        "created_at": datetime.utcnow().isoformat(),
+        "processed_at": datetime.utcnow().isoformat()
+    }
+
     eventbridge.put_events(
         Entries=[
             {
                 "Source": "ecommerce.payments",
                 "DetailType": event_type,
-                "Detail": json.dumps({
-                    "order_id": order_id,
-                    "status": payment_status,
-                    "processed_at": datetime.utcnow().isoformat()
-                }),
+                "Detail": json.dumps(payment),
                 "EventBusName": EVENT_BUS
             }
         ]
